@@ -6,14 +6,16 @@ import (
 	"runtime"
 
 	"github.com/Cluas/gim/pkg/comet/config"
+	"github.com/Cluas/gim/pkg/comet/log"
 )
 
 func main() {
 	flag.Parse()
-
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	if err := config.InitConfig(); err != nil {
+	if err := config.Init(); err != nil {
 		panic(fmt.Errorf("Fatal error config file: %s \n ", err))
 	}
-	fmt.Printf("%v\n", config.Conf)
+	log.Info("测试初始化日志")
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	log.Init(config.Conf.Log)
+	log.Info("success")
 }

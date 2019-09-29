@@ -4,17 +4,19 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/Cluas/gim/pkg/comet/log"
 	"github.com/spf13/viper"
 )
 
 // Config is struct of comet config
 type Config struct {
-	Base BaseConf `mapstructure:"base"`
+	Base *BaseConfig `mapstructure:"base"`
+	Log  *log.Config `mapstructure:"log"`
 }
 
-// BaseConf is struct of base config
-type BaseConf struct {
-	pidfile string `mapstructure:"pidfile"`
+// BaseConfig is struct of base config
+type BaseConfig struct {
+	PidFile string `mapstructure:"pidfile"`
 }
 
 var (
@@ -24,11 +26,11 @@ var (
 )
 
 func init() {
-	flag.StringVar(&configPath, "d", "./", "set logic config file path")
+	flag.StringVar(&configPath, "d", "./pkg/comet/config/", "set logic config file path")
 }
 
-// InitConfig is func to initial config
-func InitConfig() (err error) {
+// Init is func to initial config
+func Init() (err error) {
 	Conf = NewConfig()
 	viper.SetConfigName("comet")
 	viper.SetConfigType("toml")
@@ -47,8 +49,12 @@ func InitConfig() (err error) {
 // NewConfig is constructor of Conig
 func NewConfig() *Config {
 	return &Config{
-		Base: BaseConf{
-			pidfile: "/tmp/comet.pid",
+		Base: &BaseConfig{
+			PidFile: "/tmp/comet.pid",
+		},
+		Log: &log.Config{
+			LogPath:  "/Users/cluas/code/gim/log.log",
+			LogLevel: "debug",
 		},
 	}
 }
