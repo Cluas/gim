@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/Cluas/gim/pkg/comet/config"
-	"github.com/Cluas/gim/pkg/comet/log"
+	"github.com/Cluas/gim/internal/comet/config"
+	"github.com/Cluas/gim/pkg/log"
 )
 
 func main() {

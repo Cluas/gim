@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/Cluas/gim/pkg/comet/log"
+	"github.com/Cluas/gim/pkg/log"
 	"github.com/spf13/viper"
 )
 
@@ -26,7 +26,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&configPath, "d", "./pkg/comet/config/", "set logic config file path")
+	flag.StringVar(&configPath, "d", "./internal/comet/config/", "set logic config file path")
 }
 
 // Init is func to initial config

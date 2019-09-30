@@ -53,7 +53,7 @@ func NewLogger(c *Config) *zap.Logger {
 
 func init() {
 
-	logger = NewLogger(&Config{LogPath: "./logs", LogLevel: "info"})
+	logger = NewLogger(&Config{LogPath: "./log.log", LogLevel: "info"})
 
 }
 

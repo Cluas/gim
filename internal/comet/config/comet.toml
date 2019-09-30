@@ -1,5 +1,5 @@
 [base]
 pidfile = "/tmp/comet.pid"
 [log]
-logpath = "./logs/log.log"
+logpath = "./log.log"
 loglevel = "debug"
