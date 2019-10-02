@@ -5,7 +5,8 @@ import "github.com/gorilla/websocket"
 // Channel is struct of channel
 type Channel struct {
 	Room      *Room
-	broadcast chan []byte
+	broadcast chan *Proto
+	uid       string
 	conn      *websocket.Conn
 	Next      *Channel
 	Prev      *Channel
@@ -14,8 +15,17 @@ type Channel struct {
 // NewChannel is constructor of Channel
 func NewChannel(svr int) *Channel {
 	c := new(Channel)
-	c.broadcast = make(chan []byte, svr)
+	c.broadcast = make(chan *Proto, svr)
 	c.Next = nil
 	c.Prev = nil
 	return c
+}
+
+func (ch *Channel) Push(p *Proto) (err error) {
+	select {
+	case ch.broadcast <- p:
+	default:
+	}
+
+	return
 }

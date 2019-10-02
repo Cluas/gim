@@ -5,17 +5,24 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/Cluas/gim/internal/comet/config"
+	"github.com/Cluas/gim/internal/comet"
+	"github.com/Cluas/gim/internal/comet/conf"
 	"github.com/Cluas/gim/pkg/log"
+	"github.com/Cluas/gim/pkg/perf"
 )
 
 func main() {
 	flag.Parse()
-	if err := config.Init(); err != nil {
-		panic(fmt.Errorf("Fatal error config file: %s \n ", err))
+	if err := conf.Init(); err != nil {
+		panic(fmt.Errorf("Fatal error conf file: %s \n ", err))
 	}
-	log.Info("测试初始化日志")
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	log.Init(config.Conf.Log)
-	log.Info("success")
+	log.Init(conf.Conf.Log)
+	perf.Init(conf.Conf.Base.PprofBind)
+	server := comet.NewServer(conf.Conf)
+
+	log.Info(" Starting WebSocket...")
+	if err := comet.InitWebsocket(server, conf.Conf.Websocket); err != nil {
+		log.Fatal(err)
+	}
 }

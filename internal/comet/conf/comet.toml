@@ -1,0 +1,12 @@
+[base]
+pidfile = "/tmp/comet.pid"
+[log]
+logpath = "./log.log"
+loglevel = "debug"
+[websocket]
+bind = ":7911"
+[bucket]
+size = "256"
+channel = "1024"
+room = "1024"
+svrProto = "80"
