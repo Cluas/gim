@@ -22,10 +22,10 @@ func InitWebsocket(s *Server, c *conf.WebsocketConfig) (err error) {
 }
 
 // serveWs handles websocket requests from the peer.
-func serveWs(server *Server, w http.ResponseWriter, r *http.Request) {
+func serveWs(s *Server, w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{
-		ReadBufferSize:  DefaultServer.c.ReadBufferSize,
-		WriteBufferSize: DefaultServer.c.WriteBufferSize,
+		ReadBufferSize:  s.c.ReadBufferSize,
+		WriteBufferSize: s.c.WriteBufferSize,
 	}
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 
@@ -36,11 +36,11 @@ func serveWs(server *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ch := NewChannel(server.c.BroadcastSize)
+	ch := NewChannel(s.c.BroadcastSize)
 	ch.conn = conn
 
-	go server.writePump(ch)
-	go server.readPump(ch)
+	go s.writePump(ch)
+	go s.readPump(ch)
 }
 
 func (s *Server) readPump(ch *Channel) {

@@ -7,11 +7,6 @@ import (
 	"github.com/Cluas/gim/pkg/log"
 )
 
-var (
-	DefaultServer *Server
-	// Debug bool
-)
-
 type Server struct {
 	buckets   []*Bucket // subKey bucket
 	c         *conf.Config
