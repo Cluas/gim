@@ -25,9 +25,11 @@ type Bucket struct {
 }
 
 // NewBucket is constructor of Bucket
-func NewBucket(bConfig *BucketOptions) *Bucket {
+func NewBucket(o *BucketOptions) *Bucket {
 	return &Bucket{
-		chs: make(map[string]*Channel, bConfig.ChannelSize),
+		chs:   make(map[string]*Channel, o.ChannelSize),
+		o:     o,
+		rooms: make(map[int32]*Room, o.RoomSize),
 	}
 }
 

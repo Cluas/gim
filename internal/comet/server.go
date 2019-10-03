@@ -2,7 +2,6 @@ package comet
 
 import (
 	"github.com/Cluas/gim/internal/comet/conf"
-
 	"github.com/Cluas/gim/pkg/cityhash"
 	"github.com/Cluas/gim/pkg/log"
 )

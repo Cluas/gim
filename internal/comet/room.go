@@ -27,26 +27,26 @@ type RoomMsgArg struct {
 
 // Room is struct of Room
 type Room struct {
-	ID       int32 // Room ID
-	rLock    sync.RWMutex
-	next     *Channel
-	isDroped bool
-	Online   int
+	ID        int32 // Room ID
+	rLock     sync.RWMutex
+	next      *Channel
+	isDropped bool
+	Online    int
 }
 
 // NewRoom is constructor of Room
 func NewRoom(ID int32) *Room {
 	return &Room{
-		ID:       ID,
-		next:     nil,
-		isDroped: false,
-		Online:   0,
+		ID:        ID,
+		next:      nil,
+		isDropped: false,
+		Online:    0,
 	}
 }
 
 // Put is func for add channel
 func (r *Room) Put(ch *Channel) error {
-	if !r.isDroped {
+	if !r.isDropped {
 		if r.next != nil {
 			r.next.Prev = ch
 		}
@@ -88,9 +88,9 @@ func (r *Room) Del(ch *Channel) bool {
 		r.next = ch.Next
 	}
 	r.Online--
-	r.isDroped = (r.Online == 0)
+	r.isDropped = r.Online == 0
 	r.rLock.RUnlock()
 
-	return r.isDroped
+	return r.isDropped
 
 }
