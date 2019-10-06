@@ -12,14 +12,11 @@ var (
 	logicRpcClient client.XClient
 )
 
-type ConnArg struct {
-	Auth   string
-	RoomId int32
-	Server int32
+type ConnectReply struct {
+	UID string
 }
-
-type ConnReply struct {
-	Uid string
+type DisconnectReply struct {
+	Has bool
 }
 
 func InitLogicRpc() (err error) {
@@ -39,17 +36,26 @@ func InitLogicRpc() (err error) {
 	return
 }
 
-func connect(connArg *ConnArg) (uid string, err error) {
+func connect(c *ConnectArg) (uid string, err error) {
 
-	log.Infof("comet logic rpc logicRpcClient %s:", logicRpcClient)
-	reply := &ConnReply{}
-	err = logicRpcClient.Call(context.Background(), "Connect", connArg, reply)
+	log.Info("connect logic rpc...")
+	reply := &ConnectReply{}
+	err = logicRpcClient.Call(context.Background(), "Connect", c, reply)
 	if err != nil {
 		log.Fatalf("failed to call: %v", err)
 	}
 
-	uid = reply.Uid
-	log.Infof("comet logic uid :%s", reply.Uid)
+	uid = reply.UID
+	log.Infof("comet logic uid :%s", reply.UID)
 
+	return
+}
+
+func disconnect(d *DisconnectArg) (err error) {
+
+	reply := &DisconnectReply{}
+	if err = logicRpcClient.Call(context.Background(), "Disconnect", d, reply); err != nil {
+		log.Fatalf("failed to call: %v", err)
+	}
 	return
 }

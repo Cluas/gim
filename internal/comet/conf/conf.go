@@ -101,10 +101,13 @@ func NewConfig() *Config {
 			Bind: ":7199",
 		},
 		RPC: &RPCConf{
-			LogicAddr: []string{"localhost:6923"},
+			LogicAddr: []string{"localhost:6921"},
 		},
 		MaxMessageSize:  512,
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
+		PingPeriod:      54 * time.Second,
+		PongWait:        60 * time.Second,
+		WriteWait:       10 * time.Second,
 	}
 }

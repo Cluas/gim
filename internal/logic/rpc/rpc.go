@@ -16,13 +16,13 @@ const (
 	split = "@"
 )
 
-type ConnArg struct {
-	Auth   string
-	RoomId int32
-	Server int32
+type ConnectArg struct {
+	Auth     string
+	RoomID   int32
+	ServerID int8
 }
 
-type ConnReply struct {
+type ConnectReply struct {
 	UID string
 }
 
@@ -60,7 +60,7 @@ func createServer(network string, addr string) {
 
 }
 
-func (rpc *LogicRpc) Connect(ctx context.Context, args *ConnArg, reply *ConnReply) (err error) {
+func (rpc *LogicRpc) Connect(ctx context.Context, args *ConnectArg, reply *ConnectReply) (err error) {
 	log.Info("rpc logic 2  rpc uid ")
 	if args == nil {
 		log.Errorf("Connect() error(%v)", err)

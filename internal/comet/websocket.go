@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Cluas/gim/internal/comet/conf"
+	"github.com/Cluas/gim/internal/comet/rpc"
 	"github.com/Cluas/gim/pkg/log"
 	"github.com/gorilla/websocket"
 )
@@ -52,6 +53,7 @@ func (s *Server) readPump(ch *Channel) {
 	_ = ch.conn.SetReadDeadline(time.Now().Add(s.c.PongWait))
 	ch.conn.SetPongHandler(func(string) error {
 		_ = ch.conn.SetReadDeadline(time.Now().Add(s.c.PongWait))
+		log.Infof("websocket pong...")
 		return nil
 	})
 
@@ -66,12 +68,17 @@ func (s *Server) readPump(ch *Channel) {
 			return
 		}
 		var (
-			connArg *ConnArg
+			connArg *rpc.ConnectArg
 		)
 
 		log.Infof("message :%s", message)
 		if err := json.Unmarshal([]byte(message), &connArg); err != nil {
 			log.Errorf("message struct %b", connArg)
+			connArg = &rpc.ConnectArg{
+				Auth:     "123",
+				RoomID:   100,
+				ServerID: 100,
+			}
 		}
 		uid, err := s.operator.Connect(connArg)
 		log.Infof("websocket uid:%s", uid)
@@ -84,7 +91,7 @@ func (s *Server) readPump(ch *Channel) {
 		// TODO rpc 操作获取uid 存入ch 存入Server
 
 		// b.broadcast <- message
-		err = b.Put(uid, connArg.RoomId, ch)
+		err = b.Put(uid, connArg.RoomID, ch)
 		if err != nil {
 			log.Errorf("conn close err: %s", err)
 			ch.conn.Close()
@@ -136,8 +143,9 @@ func (s *Server) writePump(ch *Channel) {
 		// Heartbeat
 		case <-ticker.C:
 			_ = ch.conn.SetWriteDeadline(time.Now().Add(s.c.WriteWait))
-			log.Infof("websocket.PingMessage :%v", websocket.PingMessage)
+			log.Infof("websocket ping... :%v", websocket.PingMessage)
 			if err := ch.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				log.Error(err)
 				return
 			}
 		}
