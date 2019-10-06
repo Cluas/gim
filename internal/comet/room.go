@@ -58,39 +58,3 @@ func (r *Room) Put(ch *Channel) error {
 	}
 	return ErrRoomIsDropped
 }
-
-func (r *Room) Push(p *Proto) {
-	r.rLock.RLock()
-
-	for ch := r.next; ch != nil; ch = ch.Next {
-
-		// log.Infof("Room Push info %v", p)
-		_ = ch.Push(p)
-	}
-
-	r.rLock.RUnlock()
-	return
-}
-
-func (r *Room) Del(ch *Channel) bool {
-	r.rLock.RLock()
-	if ch.Next != nil {
-		//if not footer
-		ch.Next.Prev = ch.Prev
-	}
-
-	if ch.Prev != nil {
-		// if not header
-		ch.Prev.Next = ch.Next
-
-	} else {
-
-		r.next = ch.Next
-	}
-	r.Online--
-	r.isDropped = r.Online == 0
-	r.rLock.RUnlock()
-
-	return r.isDropped
-
-}

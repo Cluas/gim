@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func InitWebsocket(s *Server, c *conf.WebsocketConfig) (err error) {
+func InitWebsocket(s *Server, c *conf.WebsocketConf) (err error) {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(s, w, r)
 	})
@@ -45,14 +45,6 @@ func serveWs(s *Server, w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) readPump(ch *Channel) {
 	defer func() {
-		dArg := new(DisConnArg)
-
-		dArg.RoomID = ch.Room.ID
-		if ch.uid != "" {
-			dArg.Uid = ch.uid
-		}
-
-		s.Bucket(ch.uid).delCh(ch)
 		ch.conn.Close()
 	}()
 
@@ -68,7 +60,6 @@ func (s *Server) readPump(ch *Channel) {
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Errorf("readPump ReadMessage err:%v", err)
-				return
 			}
 		}
 		if message == nil {
@@ -82,12 +73,24 @@ func (s *Server) readPump(ch *Channel) {
 		if err := json.Unmarshal([]byte(message), &connArg); err != nil {
 			log.Errorf("message struct %b", connArg)
 		}
-		connArg.ServerId = conf.Conf.Base.ServerId
+		uid, err := s.operator.Connect(connArg)
+		log.Infof("websocket uid:%s", uid)
 
 		if err != nil {
 			log.Errorf("s.operator.Connect error %s", err)
-			return
 		}
+
+		b := s.Bucket(uid)
+		// TODO rpc 操作获取uid 存入ch 存入Server
+
+		// b.broadcast <- message
+		err = b.Put(uid, connArg.RoomId, ch)
+		if err != nil {
+			log.Errorf("conn close err: %s", err)
+			ch.conn.Close()
+		}
+		log.Infof("message  333 :%s", message)
+		ch.broadcast <- message
 
 	}
 }
@@ -98,6 +101,7 @@ func (s *Server) writePump(ch *Channel) {
 
 	defer func() {
 		ticker.Stop()
+		ch.conn.Close()
 	}()
 	for {
 		select {
@@ -110,20 +114,21 @@ func (s *Server) writePump(ch *Channel) {
 				return
 			}
 
+			log.Infof("TextMessage :%v", websocket.TextMessage)
 			w, err := ch.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
 				log.Warn(" ch.conn.NextWriter err :%s  ", err)
 				return
 			}
-			log.Infof("message write body:%s", message.Body)
-			_, _ = w.Write(message.Body)
+			log.Infof("message: %v", message)
+			_, _ = w.Write(message)
 
 			// Add queued chat messages to the current websocket message.
-			// n := len(ch.broadcast)
-			// for i := 0; i < n; i++ {
-			// 	w.Write(newline)
-			// 	w.Write(<-ch.broadcast)
-			// }
+			n := len(ch.broadcast)
+			for i := 0; i < n; i++ {
+				_, _ = w.Write([]byte{'\n'})
+				_, _ = w.Write(<-ch.broadcast)
+			}
 
 			if err := w.Close(); err != nil {
 				return

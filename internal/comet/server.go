@@ -10,6 +10,7 @@ type Server struct {
 	buckets   []*Bucket // subKey bucket
 	c         *conf.Config
 	bucketIdx uint32
+	operator  Operator
 }
 
 // NewServer returns a new Server.

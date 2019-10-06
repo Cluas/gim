@@ -5,5 +5,5 @@ address = "localhost:6921"
 [redis]
 address = "localhost:6379"
 password = "redis123#"
-
-
+[prc]
+address = "tcp@localhost:6923"
