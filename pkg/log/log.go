@@ -38,7 +38,19 @@ func NewLogger(c *Config) *zap.Logger {
 	default:
 		level = zap.InfoLevel
 	}
-	encoderConfig := zap.NewProductionEncoderConfig()
+	encoderConfig := zapcore.EncoderConfig{
+		TimeKey:        "time",
+		LevelKey:       "level",
+		NameKey:        "logger",
+		CallerKey:      "caller",
+		MessageKey:     "msg",
+		StacktraceKey:  "stacktrace",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.LowercaseColorLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.SecondsDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
+	}
 	// 时间格式
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	core := zapcore.NewCore(

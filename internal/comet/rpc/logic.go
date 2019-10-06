@@ -27,17 +27,15 @@ func InitLogicRpc() (err error) {
 	LogicAddr := make([]*client.KVPair, len(conf.Conf.RPC.LogicAddr))
 
 	for i, bind := range conf.Conf.RPC.LogicAddr {
-		log.Infof("bind %s", bind)
+		log.Infof("logic rpc bind %s", bind)
 		b := new(client.KVPair)
 		b.Key = bind
 		LogicAddr[i] = b
 
 	}
-	log.Infof("server :%v", LogicAddr)
 	d := client.NewMultipleServersDiscovery(LogicAddr)
 
 	logicRpcClient = client.NewXClient("LogicRpc", client.Failover, client.RoundRobin, d, client.DefaultOption)
-	log.Infof("comet InitLogicRpc Server : %v ", logicRpcClient)
 	return
 }
 

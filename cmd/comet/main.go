@@ -25,7 +25,7 @@ func main() {
 	}
 	server := comet.NewServer(conf.Conf)
 
-	log.Info(" Starting WebSocket...")
+	log.Info("Starting WebSocket...")
 	if err := comet.InitWebsocket(server, conf.Conf.Websocket); err != nil {
 		log.Fatal(err)
 	}

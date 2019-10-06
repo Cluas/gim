@@ -8,7 +8,6 @@ import (
 	"github.com/Cluas/gim/internal/comet/conf"
 	"github.com/Cluas/gim/pkg/log"
 	"github.com/gorilla/websocket"
-	"go.uber.org/zap"
 )
 
 func InitWebsocket(s *Server, c *conf.WebsocketConf) (err error) {
@@ -27,12 +26,13 @@ func serveWs(s *Server, w http.ResponseWriter, r *http.Request) {
 		ReadBufferSize:  s.c.ReadBufferSize,
 		WriteBufferSize: s.c.WriteBufferSize,
 	}
+	// CORS
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 
 	if err != nil {
-		log.Error(zap.Error(err))
+		log.Error(err)
 		return
 	}
 
@@ -109,7 +109,7 @@ func (s *Server) writePump(ch *Channel) {
 			_ = ch.conn.SetWriteDeadline(time.Now().Add(s.c.WriteWait))
 			if !ok {
 				// The hub closed the channel.
-				log.Warn("SetWriteDeadline not ok ")
+				log.Warn("SetWriteDeadline is not ok ")
 				_ = ch.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
@@ -124,8 +124,8 @@ func (s *Server) writePump(ch *Channel) {
 			_, _ = w.Write(message)
 
 			// Add queued chat messages to the current websocket message.
-			n := len(ch.broadcast)
-			for i := 0; i < n; i++ {
+			l := len(ch.broadcast)
+			for i := 0; i < l; i++ {
 				_, _ = w.Write([]byte{'\n'})
 				_, _ = w.Write(<-ch.broadcast)
 			}
@@ -133,7 +133,7 @@ func (s *Server) writePump(ch *Channel) {
 			if err := w.Close(); err != nil {
 				return
 			}
-
+		// Heartbeat
 		case <-ticker.C:
 			_ = ch.conn.SetWriteDeadline(time.Now().Add(s.c.WriteWait))
 			log.Infof("websocket.PingMessage :%v", websocket.PingMessage)
