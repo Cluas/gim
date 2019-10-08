@@ -17,16 +17,17 @@ func main() {
 	if err := conf.Init(); err != nil {
 		panic(fmt.Errorf("Fatal error conf file: %s \n ", err))
 	}
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	runtime.GOMAXPROCS(conf.Conf.Base.MaxProc)
 	log.Init(conf.Conf.Log)
 	perf.Init(conf.Conf.Base.PprofBind)
-	if err := rpc.InitLogicRpc(); err != nil {
-		log.Panic(fmt.Errorf("InitLogicRpc Fatal error: %s \n", err))
+	if err := comet.InitLogic(); err != nil {
+		log.Panic(fmt.Errorf("InitLogic Fatal error: %s \n", err))
 	}
 	server := comet.NewServer(conf.Conf)
-
-	log.Info("Starting WebSocket...")
-	log.Infof("WebSocket server : %s", conf.Conf.Websocket)
+	if err := rpc.Init(); err != nil {
+		log.Fatal(err)
+	}
+	log.Infof("WebSocket server : %s", conf.Conf.Websocket.Bind)
 	if err := comet.InitWebsocket(server, conf.Conf.Websocket); err != nil {
 		log.Fatal(err)
 	}

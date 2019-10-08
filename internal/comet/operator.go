@@ -1,4 +1,4 @@
-package rpc
+package comet
 
 type ConnectArg struct {
 	Auth     string
@@ -13,7 +13,7 @@ type DisconnectArg struct {
 
 type Operator interface {
 	Connect(*ConnectArg) (string, error)
-	DisConnect(*DisconnectArg) error
+	Disconnect(*DisconnectArg) error
 }
 
 type DefaultOperator struct{}
@@ -23,7 +23,7 @@ func (operator *DefaultOperator) Connect(c *ConnectArg) (uid string, err error) 
 	return
 }
 
-func (operator *DefaultOperator) DisConnect(d *DisconnectArg) (err error) {
+func (operator *DefaultOperator) Disconnect(d *DisconnectArg) (err error) {
 	if err = disconnect(d); err != nil {
 		return
 	}

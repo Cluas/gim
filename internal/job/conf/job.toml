@@ -1,0 +1,7 @@
+[base]
+pidfile = "/tmp/job.pid"
+[redis]
+address = "localhost:6379"
+password = "redis123#"
+[rpc]
+RPCAddrs = "tcp@localhost:6923"

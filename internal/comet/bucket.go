@@ -64,6 +64,41 @@ func (b *Bucket) Channel(key string) (ch *Channel) {
 	b.cLock.RUnlock()
 	return
 }
+func (b *Bucket) delCh(ch *Channel) {
+	var (
+		ok   bool
+		room *Room
+	)
+	b.cLock.RLock()
+
+	if ch, ok = b.chs[ch.uid]; ok {
+		room = b.chs[ch.uid].Room
+		delete(b.chs, ch.uid)
+
+	}
+	if room != nil && room.Del(ch) {
+		// if room empty delete
+		room.Del(ch)
+	}
+
+	b.cLock.RUnlock()
+
+}
+func (b *Bucket) PushRoom(c chan *RoomMsgArg) {
+	for {
+		var (
+			arg  *RoomMsgArg
+			room *Room
+		)
+		arg = <-c
+
+		if room = b.Room(arg.RoomID); room != nil {
+			room.Push(&arg.P)
+		}
+
+	}
+
+}
 
 // Room get a room by roomid.
 func (b *Bucket) Room(rid int32) (room *Room) {

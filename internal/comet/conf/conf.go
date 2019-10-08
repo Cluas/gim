@@ -48,7 +48,12 @@ type BucketConf struct {
 	SvrProto int `mapstructure:"svrProto"`
 }
 type RPCConf struct {
-	LogicAddr []string `mapstructure:"logic_addr"`
+	LogicAddr []Address `mapstructure:"rpcLogicAddrs"`
+	CometAddr []Address `mapstructure:"comet_addr"`
+}
+type Address struct {
+	Key  int8   `mapstructure:"key"`
+	Addr string `mapstructure:"addr"`
 }
 
 var (
@@ -97,11 +102,12 @@ func NewConfig() *Config {
 			Channel: 1024,
 			Room:    1024,
 		},
+		RPC: &RPCConf{
+			LogicAddr: []Address{{Addr: "tcp@0.0.0.0:6923", Key: 1}},
+			CometAddr: []Address{{Addr: "tcp@0.0.0.0:6912", Key: 1}},
+		},
 		Websocket: &WebsocketConf{
 			Bind: ":7199",
-		},
-		RPC: &RPCConf{
-			LogicAddr: []string{"localhost:6921"},
 		},
 		MaxMessageSize:  512,
 		ReadBufferSize:  1024,

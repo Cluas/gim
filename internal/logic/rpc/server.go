@@ -10,7 +10,7 @@ import (
 	"github.com/smallnest/rpcx/server"
 )
 
-type LogicRpc int
+type Server int
 
 const (
 	split = "@"
@@ -55,12 +55,12 @@ func Init() (err error) {
 func createServer(network string, addr string) {
 
 	s := server.NewServer()
-	_ = s.RegisterName("LogicRpc", new(LogicRpc), "")
+	_ = s.RegisterName("LogicRPC", new(Server), "")
 	_ = s.Serve(network, addr)
 
 }
 
-func (rpc *LogicRpc) Connect(ctx context.Context, args *ConnectArg, reply *ConnectReply) (err error) {
+func (rpc *Server) Connect(ctx context.Context, args *ConnectArg, reply *ConnectReply) (err error) {
 	log.Info("rpc logic 2  rpc uid ")
 	if args == nil {
 		log.Errorf("Connect() error(%v)", err)
@@ -71,3 +71,31 @@ func (rpc *LogicRpc) Connect(ctx context.Context, args *ConnectArg, reply *Conne
 
 	return
 }
+
+//func (rpc *Server) Disconnect(ctx context.Context, args DisconnArg, reply DisconnReply) (err error) {
+//
+//	roomUserKey := getRoomUserKey(strconv.Itoa(int(args.RoomId)))
+//
+//	// 房间总人数减少
+//	RedisCli.Decr(getKey(strconv.FormatInt(int64(args.RoomId), 10))).Result()
+//
+//	// 房间登录人数减少
+//	if args.Uid != define.NO_AUTH {
+//		err = RedisCli.HDel(roomUserKey, args.Uid).Err()
+//		if err != nil {
+//			log.Warnf("HDel getRoomUserKey err : %s", err)
+//		}
+//
+//	}
+//
+//	roomUserInfo, err := RedisCli.HGetAll(roomUserKey).Result()
+//	if err != nil {
+//		log.Warnf("RedisCli HGetAll roomUserInfo key:%s, err: %s", roomUserKey, err)
+//	}
+//
+//	if err = RedisPublishRoomInfo(args.RoomId, len(roomUserInfo), roomUserInfo); err != nil {
+//		log.Warnf("Count redis RedisPublishRoomCount err: %s", err)
+//		return
+//	}
+//	return
+//}

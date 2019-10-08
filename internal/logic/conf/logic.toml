@@ -1,7 +1,7 @@
 [base]
 pidfile = "/tmp/logic.pid"
 [http]
-address = "localhost:6921"
+address = "tcp@localhost:6921"
 [redis]
 address = "localhost:6379"
 password = "redis123#"

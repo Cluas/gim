@@ -1,4 +1,4 @@
-package rpc
+package comet
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	logicRpcClient client.XClient
+	logicRPCClient client.XClient
 )
 
 type ConnectReply struct {
@@ -19,20 +19,22 @@ type DisconnectReply struct {
 	Has bool
 }
 
-func InitLogicRpc() (err error) {
+func InitLogic() (err error) {
 
 	LogicAddr := make([]*client.KVPair, len(conf.Conf.RPC.LogicAddr))
 
 	for i, bind := range conf.Conf.RPC.LogicAddr {
 		log.Infof("logic rpc bind %s", bind)
 		b := new(client.KVPair)
-		b.Key = bind
+		b.Key = bind.Addr
 		LogicAddr[i] = b
+		log.Infof("创建Logic Client, %s", bind.Addr)
 
 	}
 	d := client.NewMultipleServersDiscovery(LogicAddr)
 
-	logicRpcClient = client.NewXClient("LogicRpc", client.Failover, client.RoundRobin, d, client.DefaultOption)
+	logicRPCClient = client.NewXClient("LogicRPC", client.Failover, client.RoundRobin, d, client.DefaultOption)
+
 	return
 }
 
@@ -40,7 +42,7 @@ func connect(c *ConnectArg) (uid string, err error) {
 
 	log.Info("connect logic rpc...")
 	reply := &ConnectReply{}
-	err = logicRpcClient.Call(context.Background(), "Connect", c, reply)
+	err = logicRPCClient.Call(context.Background(), "Connect", c, reply)
 	if err != nil {
 		log.Fatalf("failed to call: %v", err)
 	}
@@ -54,7 +56,7 @@ func connect(c *ConnectArg) (uid string, err error) {
 func disconnect(d *DisconnectArg) (err error) {
 
 	reply := &DisconnectReply{}
-	if err = logicRpcClient.Call(context.Background(), "Disconnect", d, reply); err != nil {
+	if err = logicRPCClient.Call(context.Background(), "Disconnect", d, reply); err != nil {
 		log.Fatalf("failed to call: %v", err)
 	}
 	return

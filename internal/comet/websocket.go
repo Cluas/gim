@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Cluas/gim/internal/comet/conf"
-	"github.com/Cluas/gim/internal/comet/rpc"
 	"github.com/Cluas/gim/pkg/log"
 	"github.com/gorilla/websocket"
 )
@@ -46,6 +45,16 @@ func serveWs(s *Server, w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) readPump(ch *Channel) {
 	defer func() {
+		//arg := new(DisconnectArg)
+		//arg.RoomID = ch.Room.ID
+		//if ch.uid != "" {
+		//	arg.UID = ch.uid
+		//}
+		s.Bucket(ch.uid).delCh(ch)
+
+		//if err := s.operator.Disconnect(arg); err != nil {
+		//	log.Warnf("Disconnect err :%s", err)
+		//}
 		ch.conn.Close()
 	}()
 
@@ -53,7 +62,6 @@ func (s *Server) readPump(ch *Channel) {
 	_ = ch.conn.SetReadDeadline(time.Now().Add(s.c.PongWait))
 	ch.conn.SetPongHandler(func(string) error {
 		_ = ch.conn.SetReadDeadline(time.Now().Add(s.c.PongWait))
-		log.Infof("websocket pong...")
 		return nil
 	})
 
@@ -68,17 +76,12 @@ func (s *Server) readPump(ch *Channel) {
 			return
 		}
 		var (
-			connArg *rpc.ConnectArg
+			connArg *ConnectArg
 		)
 
 		log.Infof("message :%s", message)
 		if err := json.Unmarshal([]byte(message), &connArg); err != nil {
 			log.Errorf("message struct %b", connArg)
-			connArg = &rpc.ConnectArg{
-				Auth:     "123",
-				RoomID:   100,
-				ServerID: 100,
-			}
 		}
 		uid, err := s.operator.Connect(connArg)
 		log.Infof("websocket uid:%s", uid)
@@ -97,7 +100,6 @@ func (s *Server) readPump(ch *Channel) {
 			ch.conn.Close()
 		}
 		log.Infof("message  333 :%s", message)
-		ch.broadcast <- message
 
 	}
 }
@@ -128,14 +130,7 @@ func (s *Server) writePump(ch *Channel) {
 				return
 			}
 			log.Infof("message: %v", message)
-			_, _ = w.Write(message)
-
-			// Add queued chat messages to the current websocket message.
-			l := len(ch.broadcast)
-			for i := 0; i < l; i++ {
-				_, _ = w.Write([]byte{'\n'})
-				_, _ = w.Write(<-ch.broadcast)
-			}
+			_, _ = w.Write(message.Body)
 
 			if err := w.Close(); err != nil {
 				return
@@ -143,7 +138,6 @@ func (s *Server) writePump(ch *Channel) {
 		// Heartbeat
 		case <-ticker.C:
 			_ = ch.conn.SetWriteDeadline(time.Now().Add(s.c.WriteWait))
-			log.Infof("websocket ping... :%v", websocket.PingMessage)
 			if err := ch.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				log.Error(err)
 				return

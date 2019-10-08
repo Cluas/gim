@@ -15,7 +15,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&confPath, "d", "./logic/", " set logic config file path")
+	flag.StringVar(&confPath, "d", "./internal/logic/conf/", " set logic config file path")
 }
 
 type Config struct {

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"sync"
+
+	"github.com/Cluas/gim/pkg/log"
 )
 
 // ErrRoomIsDropped is err for room is dropped
@@ -57,4 +59,40 @@ func (r *Room) Put(ch *Channel) error {
 		return nil
 	}
 	return ErrRoomIsDropped
+}
+
+func (r *Room) Push(p *Proto) {
+	r.rLock.RLock()
+
+	for ch := r.next; ch != nil; ch = ch.Next {
+
+		// log.Infof("Room Push info %v", p)
+		err := ch.Push(p)
+		if err != nil {
+			log.Errorf("Room Channel Push err: %v", err)
+		}
+	}
+
+	r.rLock.RUnlock()
+	return
+}
+
+func (r *Room) Del(ch *Channel) bool {
+	r.rLock.RLock()
+	if ch.Next != nil {
+		//if not footer
+		ch.Next.Prev = ch.Prev
+	}
+
+	if ch.Prev != nil {
+		// if not header
+		ch.Prev.Next = ch.Next
+	} else {
+		r.next = ch.Next
+	}
+	r.Online--
+	r.isDropped = r.Online == 0
+	r.rLock.RUnlock()
+
+	return r.isDropped
 }
