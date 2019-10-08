@@ -63,7 +63,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&configPath, "d", "./internal/comet/conf/", "set logic conf file path")
+	flag.StringVar(&configPath, "p", ".", "set logic conf file path")
 }
 
 // Init is func to initial conf

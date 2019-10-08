@@ -14,7 +14,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&confPath, "d", "./internal/job/conf/", " set job config file path")
+	flag.StringVar(&confPath, "p", ".", " set job config file path")
 }
 
 type Config struct {
