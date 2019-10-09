@@ -12,13 +12,17 @@ var (
 	logicRPCClient client.XClient
 )
 
+// ConnectReply is struct for Connect reply
 type ConnectReply struct {
 	UID string
 }
+
+// DisconnectReply is struct for Disconnect reply
 type DisconnectReply struct {
 	Has bool
 }
 
+// InitLogic is func for initial logic rpc client
 func InitLogic() (err error) {
 
 	LogicAddr := make([]*client.KVPair, len(conf.Conf.RPC.LogicAddr))

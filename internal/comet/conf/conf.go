@@ -29,7 +29,7 @@ type Config struct {
 // BaseConf is struct of base conf
 type BaseConf struct {
 	PidFile    string `mapstructure:"pidfile"`
-	ServerId   int8   `mapstructure:"serverId"`
+	ServerID   int8   `mapstructure:"serverID"`
 	MaxProc    int
 	PprofBind  []string `mapstructure:"pprofBind"` // 性能监控的域名端口
 	WriteWait  time.Duration
@@ -38,19 +38,27 @@ type BaseConf struct {
 	CertPath   string `mapstructure:"certPath"`
 	KeyPath    string `mapstructure:"keyPath"`
 }
+
+// WebsocketConf is struct of websocket conf
 type WebsocketConf struct {
 	Bind string `mapstructure:"bind"` // 性能监控的域名端口
 }
+
+// BucketConf is struct of BucketConf
 type BucketConf struct {
 	Size     int `mapstructure:"size"`
 	Channel  int `mapstructure:"channel"`
 	Room     int `mapstructure:"room"`
 	SvrProto int `mapstructure:"svrProto"`
 }
+
+//RPCConf is struct of RPCConf
 type RPCConf struct {
 	LogicAddr []Address `mapstructure:"rpcLogicAddrs"`
 	CometAddr []Address `mapstructure:"comet_addr"`
 }
+
+// Address is struct of rpc address
 type Address struct {
 	Key  int8   `mapstructure:"key"`
 	Addr string `mapstructure:"addr"`

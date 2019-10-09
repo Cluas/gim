@@ -18,16 +18,18 @@ const (
 	split = "@"
 )
 
+// ParseNetwork is func to parse network
 func ParseNetwork(str string) (network, addr string, err error) {
 	if idx := strings.Index(str, split); idx == -1 {
 		err = fmt.Errorf("addr: \"%s\" error, must be network@tcp:port or network@unixsocket", str)
-		return
 	} else {
 		network = str[:idx]
 		addr = str[idx+1:]
-		return
 	}
+	return
 }
+
+// InitHTTP is func to initial HTTP server
 func InitHTTP() (err error) {
 	var network, addr string
 
@@ -49,6 +51,8 @@ func InitHTTP() (err error) {
 	}
 	return
 }
+
+// Push is handle for push single msg
 func Push(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "Method Not Allowed", 405)
@@ -56,7 +60,7 @@ func Push(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		auth         = r.URL.Query().Get("auth")
-		acceptUserId = r.URL.Query().Get("user_id")
+		acceptUserID = r.URL.Query().Get("user_id")
 		err          error
 		bodyBytes    []byte
 		body         string
@@ -79,7 +83,7 @@ func Push(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serverID := RedisCli.Get(getKey(acceptUserId)).Val()
+	serverID := RedisCli.Get(getKey(acceptUserID)).Val()
 	serverID = "1"
 	sid, err := strconv.ParseInt(serverID, 10, 8)
 	if err != nil {
@@ -96,14 +100,14 @@ func Push(w http.ResponseWriter, r *http.Request) {
 		log.Errorf("sendData err: %s", err)
 	}
 	sendData.FormUserName = formUserInfo.Username
-	sendData.FormUserId = formUserInfo.UserID
+	sendData.FormUserID = formUserInfo.UserID
 	sendData.Op = int32(2)
 	if bodyBytes, err = json.Marshal(sendData); err != nil {
 		log.Errorf("redis Publish err: %s", err)
 	}
 	body = string(bodyBytes)
 
-	if err := RedisPublishCh(int8(sid), acceptUserId, bodyBytes); err != nil {
+	if err := RedisPublishCh(int8(sid), acceptUserID, bodyBytes); err != nil {
 		log.Errorf("redis Publish err: %s", err)
 
 	}
@@ -146,10 +150,11 @@ func httpListen(mux *http.ServeMux, network, addr string) {
 	}
 }
 
+// Send is struct of send info
 type Send struct {
 	Code         int32  `json:"code"`
 	Msg          string `json:"msg"`
-	FormUserId   string `json:"fuid"`
+	FormUserID   string `json:"fuid"`
 	FormUserName string `json:"fname"`
 	Op           int32  `json:"op"`
 }

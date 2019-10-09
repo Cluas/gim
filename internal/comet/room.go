@@ -11,17 +11,18 @@ import (
 // ErrRoomIsDropped is err for room is dropped
 var ErrRoomIsDropped = errors.New("room is dropped")
 
-// NO_ROOM is flag
+// NoRoom is flag
 var NoRoom = int32(-1)
 
+// Proto is struct for msg protocol
 type Proto struct {
-	Ver       int16 `json:"ver"` // protocol version
-	Operation int32 `json:"op"`  // operation for request
-	// SeqId     int32           `json:"seq"`  // sequence number chosen by client
-	Body json.RawMessage `json:"body"` // binary body bytes(json.RawMessage is []byte)
+	Ver       int16           `json:"ver"`  // protocol version
+	Operation int32           `json:"op"`   // operation for request
+	Body      json.RawMessage `json:"body"` // binary body bytes(json.RawMessage is []byte)
 
 }
 
+// RoomMsgArg is struct of room msg
 type RoomMsgArg struct {
 	RoomID int32
 	P      Proto
@@ -61,6 +62,7 @@ func (r *Room) Put(ch *Channel) error {
 	return ErrRoomIsDropped
 }
 
+// Push is func for room push msg
 func (r *Room) Push(p *Proto) {
 	r.rLock.RLock()
 
@@ -77,6 +79,7 @@ func (r *Room) Push(p *Proto) {
 	return
 }
 
+// Del is func to del channel from room
 func (r *Room) Del(ch *Channel) bool {
 	r.rLock.RLock()
 	if ch.Next != nil {

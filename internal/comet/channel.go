@@ -23,6 +23,7 @@ func NewChannel(svr int) *Channel {
 	return c
 }
 
+// Push is func to push msg
 func (ch *Channel) Push(p *Proto) (err error) {
 	select {
 	case ch.broadcast <- p:

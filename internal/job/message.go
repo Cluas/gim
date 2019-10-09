@@ -10,11 +10,12 @@ const (
 	OP_ROOM_INFO_ADD_SEND  = int32(6) //用户在线列表增加用户
 )
 
+// RedisMsg is struct of RedisMsg
 type RedisMsg struct {
 	Op           int32             `json:"op"`
-	ServerID     int8              `json:"serverId,omitempty"`
-	RoomID       int32             `json:"roomId,omitempty"`
-	UserID       string            `json:"userId,omitempty"`
+	ServerID     int8              `json:"serverID,omitempty"`
+	RoomID       int32             `json:"roomID,omitempty"`
+	UserID       string            `json:"userID,omitempty"`
 	Msg          []byte            `json:"msg"`
 	Count        int               `json:"count"`
 	RoomUserInfo map[string]string `json:"RoomUserInfo"`

@@ -8,6 +8,7 @@ var (
 	userInfo map[string]string
 )
 
+// Router is struct for user router
 type Router struct {
 	ServerID int8
 	RoomID   int32

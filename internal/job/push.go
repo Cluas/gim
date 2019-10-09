@@ -17,6 +17,7 @@ type pushArg struct {
 
 var pushChs []chan *pushArg
 
+// InitPush is func to initial push msg
 func InitPush() {
 	pushChs = make([]chan *pushArg, conf.Conf.Base.PushChan)
 	for i := 0; i < len(pushChs); i++ {
@@ -34,6 +35,7 @@ func processPush(ch chan *pushArg) {
 
 	}
 }
+
 func push(msg string) (err error) {
 	m := &RedisMsg{}
 	msgByte := []byte(msg)

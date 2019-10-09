@@ -9,6 +9,7 @@ import (
 )
 
 var (
+	// Conf is  var of job config
 	Conf     *Config
 	confPath string
 )
@@ -17,6 +18,7 @@ func init() {
 	flag.StringVar(&confPath, "p", ".", " set job config file path")
 }
 
+// Config is struct of config struct
 type Config struct {
 	Base  *BaseConf   `mapstructure:"base"`
 	Redis *RedisConf  `mapstructure:"redis"`
@@ -24,13 +26,14 @@ type Config struct {
 	// Bucket BucketConf `mapstructure:"bucket"`
 }
 
+// RedisConf is struct of redis config
 type RedisConf struct {
 	Address   string `mapstructure:"address"` //
 	Password  string `mapstructure:"password"`
 	DefaultDB int    `mapstructure:"default_db"`
 }
 
-// 基础的配置信息
+// BaseConf is struct of base config
 type BaseConf struct {
 	Pidfile      string `mapstructure:"pidfile"`
 	MaxProc      int
@@ -39,11 +42,14 @@ type BaseConf struct {
 	PushChanSize int      `mapstructure:"pushChanSize"`
 	IsDebug      bool
 }
+
+// CometConf is struct of comet RPC
 type CometConf struct {
 	Key  int8   `mapstructure:"key"`
 	Addr string `mapstructure:"addr"`
 }
 
+// Init is func to initial log config
 func Init() (err error) {
 	Conf = NewConfig()
 	viper.SetConfigName("job")
@@ -55,12 +61,13 @@ func Init() (err error) {
 	}
 
 	if err := viper.Unmarshal(&Conf); err != nil {
-		panic(fmt.Errorf("unable to decode into struct：  %s \n", err))
+		panic(fmt.Errorf("Unable to decode into struct：%s", err))
 	}
 
 	return nil
 }
 
+// NewConfig is func to create a Config
 func NewConfig() *Config {
 	return &Config{
 		Base: &BaseConf{

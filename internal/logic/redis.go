@@ -24,9 +24,9 @@ const (
 
 type RedisMsg struct {
 	Op       int32  `json:"op"`
-	ServerId int8   `json:"serverId,omitempty"`
-	RoomId   int32  `json:"roomId,omitempty"`
-	UserId   string `json:"userId,omitempty"`
+	ServerID int8   `json:"serverID,omitempty"`
+	RoomID   int32  `json:"roomID,omitempty"`
+	UserID   string `json:"userID,omitempty"`
 	Msg      []byte `json:"msg"`
 }
 
@@ -43,8 +43,8 @@ func InitRedis() (err error) {
 	return
 }
 
-func RedisPublishCh(serverId int8, uid string, msg []byte) (err error) {
-	var redisMsg = &RedisMsg{Op: OP_SINGLE_SEND, ServerId: serverId, UserId: uid, Msg: msg}
+func RedisPublishCh(serverID int8, uid string, msg []byte) (err error) {
+	var redisMsg = &RedisMsg{Op: OP_SINGLE_SEND, ServerID: serverID, UserID: uid, Msg: msg}
 	redisMsgStr, err := json.Marshal(redisMsg)
 	err = RedisCli.Publish(REDIS_SUB_CHANNEL, redisMsgStr).Err()
 	return

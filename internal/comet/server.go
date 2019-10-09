@@ -6,8 +6,10 @@ import (
 	"github.com/Cluas/gim/pkg/log"
 )
 
+// CurrentServer is var of current server
 var CurrentServer *Server
 
+// Server is struct for Comet Server
 type Server struct {
 	Buckets   []*Bucket // subKey bucket
 	c         *conf.Config
@@ -32,6 +34,7 @@ func NewServer(c *conf.Config) *Server {
 	return s
 }
 
+// Bucket is func to location bucket use cityhash
 func (s *Server) Bucket(subKey string) *Bucket {
 	idx := cityhash.CityHash32([]byte(subKey), uint32(len(subKey))) % s.bucketIdx
 	log.Infof("\"%s\" hit channel bucket index: %d use cityhash", subKey, idx)

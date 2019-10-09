@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// InitWebsocket is func to intial Websocket
 func InitWebsocket(s *Server, c *conf.WebsocketConf) (err error) {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(s, w, r)
@@ -45,16 +46,7 @@ func serveWs(s *Server, w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) readPump(ch *Channel) {
 	defer func() {
-		//arg := new(DisconnectArg)
-		//arg.RoomID = ch.Room.ID
-		//if ch.uid != "" {
-		//	arg.UID = ch.uid
-		//}
 		s.Bucket(ch.uid).delCh(ch)
-
-		//if err := s.operator.Disconnect(arg); err != nil {
-		//	log.Warnf("Disconnect err :%s", err)
-		//}
 		ch.conn.Close()
 	}()
 
@@ -79,27 +71,22 @@ func (s *Server) readPump(ch *Channel) {
 			connArg *ConnectArg
 		)
 
-		log.Infof("message :%s", message)
 		if err := json.Unmarshal([]byte(message), &connArg); err != nil {
 			log.Errorf("message struct %b", connArg)
 		}
 		uid, err := s.operator.Connect(connArg)
-		log.Infof("websocket uid:%s", uid)
 
 		if err != nil {
 			log.Errorf("s.operator.Connect error %s", err)
 		}
 
 		b := s.Bucket(uid)
-		// TODO rpc 操作获取uid 存入ch 存入Server
 
-		// b.broadcast <- message
 		err = b.Put(uid, connArg.RoomID, ch)
 		if err != nil {
 			log.Errorf("conn close err: %s", err)
 			ch.conn.Close()
 		}
-		log.Infof("message  333 :%s", message)
 
 	}
 }

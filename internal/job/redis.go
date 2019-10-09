@@ -7,9 +7,11 @@ import (
 )
 
 var (
+	// RedisCli is Client of redis
 	RedisCli *redis.Client
 )
 
+// InitRedis is func to initial redis
 func InitRedis() (err error) {
 	RedisCli = redis.NewClient(&redis.Options{
 		Addr: conf.Conf.

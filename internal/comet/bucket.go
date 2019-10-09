@@ -57,6 +57,8 @@ func (b *Bucket) Put(key string, rid int32, ch *Channel) error {
 	}
 	return nil
 }
+
+// Channel is func to get Channel from Bucket by key
 func (b *Bucket) Channel(key string) (ch *Channel) {
 	// 读操作的锁定和解锁
 	b.cLock.RLock()
@@ -64,6 +66,7 @@ func (b *Bucket) Channel(key string) (ch *Channel) {
 	b.cLock.RUnlock()
 	return
 }
+
 func (b *Bucket) delCh(ch *Channel) {
 	var (
 		ok   bool
@@ -84,6 +87,8 @@ func (b *Bucket) delCh(ch *Channel) {
 	b.cLock.RUnlock()
 
 }
+
+// PushRoom is func to push room msg
 func (b *Bucket) PushRoom(c chan *RoomMsgArg) {
 	for {
 		var (
@@ -108,6 +113,7 @@ func (b *Bucket) Room(rid int32) (room *Room) {
 	return
 }
 
+// BroadcastRoom is func to broadcast room
 func (b *Bucket) BroadcastRoom(arg *RoomMsgArg) {
 	// 广播消息递增id
 	num := atomic.AddUint64(&b.routinesNum, 1) % b.o.RoutineAmount
