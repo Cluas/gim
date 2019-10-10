@@ -12,7 +12,7 @@ import (
 var ErrRoomIsDropped = errors.New("room is dropped")
 
 // NoRoom is flag
-var NoRoom = int32(-1)
+var NoRoom = "NoRoom"
 
 // Proto is struct for msg protocol
 type Proto struct {
@@ -24,13 +24,13 @@ type Proto struct {
 
 // RoomMsgArg is struct of room msg
 type RoomMsgArg struct {
-	RoomID int32
+	RoomID string
 	P      Proto
 }
 
 // Room is struct of Room
 type Room struct {
-	ID        int32 // Room ID
+	ID        string // Room ID
 	rLock     sync.RWMutex
 	next      *Channel
 	isDropped bool
@@ -38,7 +38,7 @@ type Room struct {
 }
 
 // NewRoom is constructor of Room
-func NewRoom(ID int32) *Room {
+func NewRoom(ID string) *Room {
 	return &Room{
 		ID:        ID,
 		next:      nil,

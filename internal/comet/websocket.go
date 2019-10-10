@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// InitWebsocket is func to intial Websocket
+// InitWebsocket is func to initial Websocket
 func InitWebsocket(s *Server, c *conf.WebsocketConf) (err error) {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(s, w, r)
@@ -23,14 +23,15 @@ func InitWebsocket(s *Server, c *conf.WebsocketConf) (err error) {
 
 // serveWs handles websocket requests from the peer.
 func serveWs(s *Server, w http.ResponseWriter, r *http.Request) {
-	upgrader := websocket.Upgrader{
-		ReadBufferSize:  s.c.ReadBufferSize,
-		WriteBufferSize: s.c.WriteBufferSize,
+
+	upgrades := websocket.Upgrader{
+		ReadBufferSize:    s.c.ReadBufferSize,
+		WriteBufferSize:   s.c.WriteBufferSize,
+		EnableCompression: true,
 	}
 	// CORS
-	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
-
-	conn, err := upgrader.Upgrade(w, r, nil)
+	upgrades.CheckOrigin = func(r *http.Request) bool { return true }
+	conn, err := upgrades.Upgrade(w, r, nil)
 
 	if err != nil {
 		log.Error(err)
@@ -46,8 +47,10 @@ func serveWs(s *Server, w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) readPump(ch *Channel) {
 	defer func() {
-		s.Bucket(ch.uid).delCh(ch)
-		ch.conn.Close()
+		if ch.uid != "" {
+			s.Bucket(ch.uid).delCh(ch)
+		}
+		_ = ch.conn.Close()
 	}()
 
 	ch.conn.SetReadLimit(s.c.MaxMessageSize)
@@ -74,6 +77,7 @@ func (s *Server) readPump(ch *Channel) {
 		if err := json.Unmarshal([]byte(message), &connArg); err != nil {
 			log.Errorf("message struct %b", connArg)
 		}
+		connArg.ServerID = conf.Conf.Base.ServerID
 		uid, err := s.operator.Connect(connArg)
 
 		if err != nil {
@@ -85,7 +89,7 @@ func (s *Server) readPump(ch *Channel) {
 		err = b.Put(uid, connArg.RoomID, ch)
 		if err != nil {
 			log.Errorf("conn close err: %s", err)
-			ch.conn.Close()
+			_ = ch.conn.Close()
 		}
 
 	}
@@ -93,11 +97,11 @@ func (s *Server) readPump(ch *Channel) {
 
 func (s *Server) writePump(ch *Channel) {
 	ticker := time.NewTicker(s.c.PingPeriod)
-	log.Infof("ticker :%v", ticker)
+	log.Infof("create ticker...")
 
 	defer func() {
 		ticker.Stop()
-		ch.conn.Close()
+		_ = ch.conn.Close()
 	}()
 	for {
 		select {

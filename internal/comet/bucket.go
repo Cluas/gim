@@ -18,7 +18,7 @@ type Bucket struct {
 	cLock       sync.RWMutex        // protect the channels for chs
 	chs         map[string]*Channel // map sub key to a channel
 	o           *BucketOptions
-	rooms       map[int32]*Room // bucket room channel
+	rooms       map[string]*Room // bucket room channel
 	routines    []chan *RoomMsgArg
 	routinesNum uint64
 	broadcast   chan []byte
@@ -29,12 +29,12 @@ func NewBucket(o *BucketOptions) *Bucket {
 	return &Bucket{
 		chs:   make(map[string]*Channel, o.ChannelSize),
 		o:     o,
-		rooms: make(map[int32]*Room, o.RoomSize),
+		rooms: make(map[string]*Room, o.RoomSize),
 	}
 }
 
 // Put is func to add channel
-func (b *Bucket) Put(key string, rid int32, ch *Channel) error {
+func (b *Bucket) Put(key string, rid string, ch *Channel) error {
 	var (
 		room *Room
 		ok   bool
@@ -106,7 +106,7 @@ func (b *Bucket) PushRoom(c chan *RoomMsgArg) {
 }
 
 // Room get a room by roomid.
-func (b *Bucket) Room(rid int32) (room *Room) {
+func (b *Bucket) Room(rid string) (room *Room) {
 	b.cLock.RLock()
 	room, _ = b.rooms[rid]
 	b.cLock.RUnlock()

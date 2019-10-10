@@ -29,7 +29,7 @@ type Config struct {
 // BaseConf is struct of base conf
 type BaseConf struct {
 	PidFile    string `mapstructure:"pidfile"`
-	ServerID   int8   `mapstructure:"serverID"`
+	ServerID   string `mapstructure:"serverID"`
 	MaxProc    int
 	PprofBind  []string `mapstructure:"pprofBind"` // 性能监控的域名端口
 	WriteWait  time.Duration
@@ -100,6 +100,7 @@ func NewConfig() *Config {
 			WriteWait:  10,
 			PongWait:   60,
 			PingPeriod: 54,
+			ServerID:   "1",
 		},
 		Log: &log.Config{
 			LogPath:  "./log.log",

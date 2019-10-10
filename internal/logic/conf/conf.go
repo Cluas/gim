@@ -54,7 +54,7 @@ type HTTPConf struct {
 	WriteTimeout time.Duration `mapstructure:"HTTPWriteTimeout"`
 }
 
-// Init is func to intial logic config
+// Init is func to initial logic config
 func Init() (err error) {
 	Conf = NewConfig()
 	viper.SetConfigName("logic")

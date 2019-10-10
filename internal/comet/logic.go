@@ -48,7 +48,7 @@ func connect(c *ConnectArg) (uid string, err error) {
 	reply := &ConnectReply{}
 	err = logicRPCClient.Call(context.Background(), "Connect", c, reply)
 	if err != nil {
-		log.Fatalf("failed to call: %v", err)
+		log.Errorf("failed to call: %v", err)
 	}
 
 	uid = reply.UID
@@ -61,7 +61,7 @@ func disconnect(d *DisconnectArg) (err error) {
 
 	reply := &DisconnectReply{}
 	if err = logicRPCClient.Call(context.Background(), "Disconnect", d, reply); err != nil {
-		log.Fatalf("failed to call: %v", err)
+		log.Errorf("failed to call: %v", err)
 	}
 	return
 }

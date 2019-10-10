@@ -3,13 +3,13 @@ package comet
 // ConnectArg is rpc connect arg
 type ConnectArg struct {
 	Auth     string
-	RoomID   int32
-	ServerID int8
+	RoomID   string
+	ServerID string
 }
 
 // DisconnectArg is rpc disconnect arg
 type DisconnectArg struct {
-	RoomID int32
+	RoomID string
 	UID    string
 }
 
