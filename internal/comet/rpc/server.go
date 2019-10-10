@@ -9,6 +9,7 @@ import (
 
 	"github.com/Cluas/gim/internal/comet/conf"
 	"github.com/Cluas/gim/pkg/log"
+	rpclog "github.com/smallnest/rpcx/log"
 	"github.com/smallnest/rpcx/server"
 )
 
@@ -50,6 +51,7 @@ func Init() (err error) {
 	var (
 		network, addr string
 	)
+	rpclog.SetLogger(log.Logger)
 	binds := conf.Conf.RPC.CometAddr
 	for _, bind := range binds {
 		if network, addr, err = ParseNetwork(bind.Addr); err != nil {
@@ -66,17 +68,6 @@ func createServer(network string, addr string) {
 	_ = s.RegisterName("CometRPC", new(CometRPC), "")
 	_ = s.Serve(network, addr)
 }
-
-//func (rpc *CometRPC) MPushMsg(ctx context.Context, args *PushMsgArg, noReply *NoReply) (err error) {
-//
-//	log.Info("rpc PushMsg :%v ", args)
-//	if args == nil {
-//		log.Errorf("rpc CometRPC() error(%v)", err)
-//		return
-//	}
-//
-//	return
-//}
 
 func (rpc *CometRPC) PushSingleMsg(ctx context.Context, args *PushMsgArg, SuccessReply *SuccessReply) (err error) {
 	var (
@@ -110,8 +101,6 @@ func (rpc *CometRPC) PushRoomMsg(ctx context.Context, args *comet.RoomMsgArg, Su
 	log.Infof("PushRoomMsg msg %v", args)
 	for _, bucket := range comet.CurrentServer.Buckets {
 		bucket.BroadcastRoom(args)
-		// room.next
-
 	}
 	return
 }

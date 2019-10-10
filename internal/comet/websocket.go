@@ -1,8 +1,8 @@
 package comet
 
 import (
-	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Cluas/gim/internal/comet/conf"
@@ -23,6 +23,25 @@ func InitWebsocket(s *Server, c *conf.WebsocketConf) (err error) {
 
 // serveWs handles websocket requests from the peer.
 func serveWs(s *Server, w http.ResponseWriter, r *http.Request) {
+	herder := http.Header{}
+	wsProto := strings.Split(r.Header.Get("Sec-WebSocket-Protocol"), ",")
+	if len(wsProto) < 2 {
+		return
+	}
+	token := wsProto[0]
+	roomID := wsProto[1]
+	args := &ConnectArg{
+		Auth:     token,
+		RoomID:   roomID,
+		ServerID: conf.Conf.Base.ServerID,
+	}
+	uid, err := s.operator.Connect(args)
+
+	if err != nil {
+		log.Errorf("s.operator.Connect error %s", err)
+	}
+
+	herder.Add("Sec-WebSocket-Protocol", roomID)
 
 	upgrades := websocket.Upgrader{
 		ReadBufferSize:    s.c.ReadBufferSize,
@@ -31,15 +50,28 @@ func serveWs(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	// CORS
 	upgrades.CheckOrigin = func(r *http.Request) bool { return true }
-	conn, err := upgrades.Upgrade(w, r, nil)
+	conn, err := upgrades.Upgrade(w, r, herder)
 
 	if err != nil {
 		log.Error(err)
 		return
 	}
+	if uid == "" {
+		_ = conn.WriteJSON(map[string]string{"code": "401", "msg": "token error!"})
+		_ = conn.Close()
+		return
+	}
 
 	ch := NewChannel(s.c.BroadcastSize)
 	ch.conn = conn
+
+	b := s.Bucket(uid)
+
+	err = b.Put(uid, roomID, ch)
+	if err != nil {
+		log.Errorf("conn close err: %s", err)
+		_ = ch.conn.Close()
+	}
 
 	go s.writePump(ch)
 	go s.readPump(ch)
@@ -69,27 +101,6 @@ func (s *Server) readPump(ch *Channel) {
 		}
 		if message == nil {
 			return
-		}
-		var (
-			connArg *ConnectArg
-		)
-
-		if err := json.Unmarshal([]byte(message), &connArg); err != nil {
-			log.Errorf("message struct %b", connArg)
-		}
-		connArg.ServerID = conf.Conf.Base.ServerID
-		uid, err := s.operator.Connect(connArg)
-
-		if err != nil {
-			log.Errorf("s.operator.Connect error %s", err)
-		}
-
-		b := s.Bucket(uid)
-
-		err = b.Put(uid, connArg.RoomID, ch)
-		if err != nil {
-			log.Errorf("conn close err: %s", err)
-			_ = ch.conn.Close()
 		}
 
 	}

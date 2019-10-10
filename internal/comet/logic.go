@@ -28,11 +28,10 @@ func InitLogic() (err error) {
 	LogicAddr := make([]*client.KVPair, len(conf.Conf.RPC.LogicAddr))
 
 	for i, bind := range conf.Conf.RPC.LogicAddr {
-		log.Infof("logic rpc bind %s", bind)
 		b := new(client.KVPair)
 		b.Key = bind.Addr
 		LogicAddr[i] = b
-		log.Infof("创建Logic Client, %s", bind.Addr)
+		log.Infof("创建LogicRPC客户端, 绑定地址: %s", bind.Addr)
 
 	}
 	d := client.NewMultipleServersDiscovery(LogicAddr)
@@ -44,15 +43,15 @@ func InitLogic() (err error) {
 
 func connect(c *ConnectArg) (uid string, err error) {
 
-	log.Info("connect logic rpc...")
 	reply := &ConnectReply{}
 	err = logicRPCClient.Call(context.Background(), "Connect", c, reply)
+	log.Info("Comet 调用 Logic Connect(c *ConnectArg)...")
 	if err != nil {
-		log.Errorf("failed to call: %v", err)
+		log.Errorf("Comet 调用 Logic Connect(c *ConnectArg) 失败, 原因: %v", err)
 	}
 
 	uid = reply.UID
-	log.Infof("comet logic uid :%s", reply.UID)
+	log.Infof("Comet 调用 Logic Connect(c *ConnectArg) 返回UID :%s", reply.UID)
 
 	return
 }

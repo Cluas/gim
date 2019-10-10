@@ -15,20 +15,20 @@ import (
 func main() {
 	flag.Parse()
 	if err := conf.Init(); err != nil {
-		panic(fmt.Errorf("Fatal error conf file: %s \n ", err))
+		log.Panic(fmt.Errorf("初始化配置文件失败: %s \n ", err))
 	}
 	runtime.GOMAXPROCS(conf.Conf.Base.MaxProc)
 	log.Init(conf.Conf.Log)
 	perf.Init(conf.Conf.Base.PprofBind)
 	if err := comet.InitLogic(); err != nil {
-		log.Panic(fmt.Errorf("InitLogic Fatal error: %s \n", err))
+		log.Panic(fmt.Errorf("初始化LogicRPC客户端失败: %s \n", err))
 	}
-	server := comet.NewServer(conf.Conf)
+	srv := comet.NewServer(conf.Conf)
 	if err := rpc.Init(); err != nil {
-		log.Fatal(err)
+		log.Panic(fmt.Errorf("初始化RPC服务端失败: %s \n", err))
 	}
-	log.Infof("WebSocket server : %s", conf.Conf.Websocket.Bind)
-	if err := comet.InitWebsocket(server, conf.Conf.Websocket); err != nil {
+	log.Infof("开始启动websocket服务: %s", conf.Conf.Websocket.Bind)
+	if err := comet.InitWebsocket(srv, conf.Conf.Websocket); err != nil {
 		log.Fatal(err)
 	}
 

@@ -3,7 +3,6 @@ package logic
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/dgrijalva/jwt-go"
 )
@@ -33,14 +32,6 @@ type Member struct {
 type MemberStdClaims struct {
 	jwt.StandardClaims
 	*Member
-}
-
-// Valid is func to custom valid
-func (c MemberStdClaims) Valid() (err error) {
-	if c.VerifyExpiresAt(time.Now().Unix(), true) == false {
-		return errors.New("token is expired")
-	}
-	return
 }
 
 // JwtParseMember is func to parse and valid token

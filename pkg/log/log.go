@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var logger *zap.SugaredLogger
+var Logger *zap.SugaredLogger
 
 // Config is log conf
 type Config struct {
@@ -23,8 +23,9 @@ func NewLogger(c *Config) *zap.Logger {
 		Filename:   c.LogPath, // 日志文件路径
 		MaxSize:    128,       // megabytes
 		MaxBackups: 30,        // 最多保留300个备份
-		MaxAge:     7,         // days
-		Compress:   true,      // 是否压缩 disabled by default
+
+		MaxAge:   7,    // days
+		Compress: true, // 是否压缩 disabled by default
 	}
 
 	var level zapcore.Level
@@ -65,81 +66,81 @@ func NewLogger(c *Config) *zap.Logger {
 
 func init() {
 
-	logger = NewLogger(&Config{LogPath: "./log.log", LogLevel: "info"}).Sugar()
+	Logger = NewLogger(&Config{LogPath: "./log.log", LogLevel: "info"}).Sugar()
 
 }
 
 //Init is initial func
 func Init(c *Config) {
-	logger = NewLogger(c).Sugar()
+	Logger = NewLogger(c).Sugar()
 }
 
 //Debug 最低等级的，主要用于开发过程中打印一些运行/调试信息，不允许生产环境打开debug级别
 func Debug(args ...interface{}) {
-	logger.Debug(args...)
+	Logger.Debug(args...)
 }
 
 // Debugf 支持参数格式化
 func Debugf(msg string, args ...interface{}) {
-	logger.Debugf(msg, args...)
+	Logger.Debugf(msg, args...)
 }
 
 // Info 打印一些你感兴趣的或者重要的信息，这个可以用于生产环境中输出程序运行的一些重要信息
 func Info(args ...interface{}) {
-	logger.Info(args...)
+	Logger.Info(args...)
 }
 
 // Infof 支持参数格式化
 func Infof(msg string, args ...interface{}) {
-	logger.Infof(msg, args...)
+	Logger.Infof(msg, args...)
 }
 
 // Warn 表明会出现潜在错误的情形，有些信息不是错误信息，但是也要给程序员的一些提示
 func Warn(args ...interface{}) {
-	logger.Warn(args...)
+	Logger.Warn(args...)
 }
 
 // Warnf 支持参数格式化
 func Warnf(msg string, args ...interface{}) {
-	logger.Warnf(msg, args...)
+	Logger.Warnf(msg, args...)
 }
 
 // Error 指出虽然发生错误事件，但仍然不影响系统的继续运行。打印错误和异常信息
 func Error(args ...interface{}) {
-	logger.Error(args...)
+	Logger.Error(args...)
 }
 
 // Errorf 支持参数格式化
 func Errorf(msg string, args ...interface{}) {
-	logger.Errorf(msg, args...)
+	Logger.Errorf(msg, args...)
 }
 
 // DPanic is logs of DPanicLevel
 func DPanic(args ...interface{}) {
-	logger.DPanic(args...)
+	Logger.DPanic(args...)
 }
 
 // DPanicf 支持参数格式化
 func DPanicf(msg string, args ...interface{}) {
-	logger.DPanicf(msg, args...)
+	Logger.DPanicf(msg, args...)
 }
 
 // Panic is logs of PanicLevel
 func Panic(args ...interface{}) {
-	logger.Panic(args...)
+	Logger.Panic(args...)
 }
 
 // Panicf 支持参数格式化
 func Panicf(msg string, args ...interface{}) {
-	logger.Panicf(msg, args...)
+	Logger.Panicf(msg, args...)
 }
 
 // Fatal 指出每个严重的错误事件将会导致应用程序的退出。这个级别比较高了。重大错误
 func Fatal(args ...interface{}) {
-	logger.Fatal(args...)
+	Logger.Fatal(args...)
 }
 
 // Fatalf 支持参数格式化
 func Fatalf(msg string, args ...interface{}) {
-	logger.Fatalf(msg, args...)
+	Logger.Fatalf(msg, args...)
 }

@@ -79,6 +79,10 @@ func (rpc *Server) Connect(ctx context.Context, args *ConnectArg, reply *Connect
 	}
 	member, err := logic.JwtParseMember(args.Auth)
 
+	if err != nil {
+		log.Errorf("JWT error:%v", err)
+	}
+
 	if member != nil {
 		reply.UID = strconv.Itoa(member.ID)
 		log.Infof("logic rpc uid:%s", reply.UID)
