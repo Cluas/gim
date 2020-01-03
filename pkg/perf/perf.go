@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"net/http/pprof"
 
+	"go.uber.org/zap"
+
 	"github.com/Cluas/gim/pkg/log"
 )
 
@@ -15,10 +17,10 @@ func Init(pBind []string) {
 	pprofServeMux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 	pprofServeMux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	for _, addr := range pBind {
-		go func() {
+		go func(addr string) {
 			if err := http.ListenAndServe(addr, pprofServeMux); err != nil {
-				log.Infof("http.ListenAndServe err", addr, err)
+				log.Bg().Info("http.ListenAndServe err", zap.String("addr", addr), zap.Error(err))
 			}
-		}()
+		}(addr)
 	}
 }

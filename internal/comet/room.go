@@ -5,6 +5,8 @@ import (
 	"errors"
 	"sync"
 
+	"go.uber.org/zap"
+
 	"github.com/Cluas/gim/pkg/log"
 )
 
@@ -48,7 +50,7 @@ func NewRoom(ID string) *Room {
 }
 
 // Put is func for add channel
-func (r *Room) Put(ch *Channel) error {
+func (r *Room) Put(ch *Channel) (err error) {
 	if !r.isDropped {
 		if r.next != nil {
 			r.next.Prev = ch
@@ -57,9 +59,10 @@ func (r *Room) Put(ch *Channel) error {
 		ch.Prev = nil
 		r.next = ch
 		r.Online++
-		return nil
+		return
 	}
-	return ErrRoomIsDropped
+	err = ErrRoomIsDropped
+	return
 }
 
 // Push is func for room push msg
@@ -67,11 +70,9 @@ func (r *Room) Push(p *Proto) {
 	r.rLock.RLock()
 
 	for ch := r.next; ch != nil; ch = ch.Next {
-
-		// log.Infof("Room Push info %v", p)
 		err := ch.Push(p)
 		if err != nil {
-			log.Errorf("Room Channel Push err: %v", err)
+			log.Bg().Error("Room Channel Push err: ", zap.Error(err))
 		}
 	}
 

@@ -1,6 +1,10 @@
 package comet
 
 import (
+	"context"
+	"fmt"
+	"net/http"
+
 	"github.com/Cluas/gim/internal/comet/conf"
 	"github.com/Cluas/gim/pkg/cityhash"
 	"github.com/Cluas/gim/pkg/log"
@@ -26,8 +30,10 @@ func NewServer(c *conf.Config) *Server {
 	s.c = c
 	for i := 0; i < conf.Conf.Bucket.Size; i++ {
 		s.Buckets[i] = NewBucket(&BucketOptions{
-			ChannelSize: conf.Conf.Bucket.Channel,
-			RoomSize:    conf.Conf.Bucket.Room,
+			ChannelSize:   conf.Conf.Bucket.Channel,
+			RoomSize:      conf.Conf.Bucket.Room,
+			RoutineAmount: conf.Conf.Bucket.RoutineAmount,
+			RoutineSize:   conf.Conf.Bucket.RoutineSize,
 		})
 	}
 	CurrentServer = s
@@ -35,8 +41,14 @@ func NewServer(c *conf.Config) *Server {
 }
 
 // Bucket is func to location bucket use cityhash
-func (s *Server) Bucket(subKey string) *Bucket {
+func (s *Server) Bucket(ctx context.Context, subKey string) *Bucket {
 	idx := cityhash.CityHash32([]byte(subKey), uint32(len(subKey))) % s.bucketIdx
-	log.Infof("\"%s\" hit channel bucket index: %d use cityhash", subKey, idx)
+	log.Bg().Info(fmt.Sprintf("\"%s\" hit channel bucket index: %d use cityhash", subKey, idx))
 	return s.Buckets[idx]
+}
+
+func (s *Server) createServeMux() http.Handler {
+	mux := http.NewServeMux()
+	mux.Handle("/ws", http.HandlerFunc(s.serveWS))
+	return mux
 }

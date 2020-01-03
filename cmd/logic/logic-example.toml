@@ -1,9 +1,13 @@
 [base]
-pidfile = "/tmp/logic.pid"
+pid_file = "/tmp/logic.pid"
+[log]
+log_path = "./log.log"
+log_level = "debug"
 [http]
 address = "tcp@localhost:6921"
 [redis]
 address = "localhost:6379"
-password = "redis123#"
-[prc]
-address = "tcp@localhost:6923"
+password = "****"
+default_db = 0
+[rpc]
+address = ["tcp@localhost:6923"]

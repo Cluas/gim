@@ -1,5 +1,7 @@
 package comet
 
+import "context"
+
 // ConnectArg is rpc connect arg
 type ConnectArg struct {
 	Auth     string
@@ -15,22 +17,22 @@ type DisconnectArg struct {
 
 // Operator is interface for operation
 type Operator interface {
-	Connect(*ConnectArg) (string, error)
-	Disconnect(*DisconnectArg) error
+	Connect(context.Context, *ConnectArg) (string, error)
+	Disconnect(context.Context, *DisconnectArg) error
 }
 
 // DefaultOperator is default operator
 type DefaultOperator struct{}
 
 // Connect is func to Connect
-func (operator *DefaultOperator) Connect(c *ConnectArg) (uid string, err error) {
-	uid, err = connect(c)
+func (operator *DefaultOperator) Connect(ctx context.Context, c *ConnectArg) (uid string, err error) {
+	uid, err = connect(ctx, c)
 	return
 }
 
 // Disconnect is func to Disconnect
-func (operator *DefaultOperator) Disconnect(d *DisconnectArg) (err error) {
-	if err = disconnect(d); err != nil {
+func (operator *DefaultOperator) Disconnect(ctx context.Context, d *DisconnectArg) (err error) {
+	if err = disconnect(ctx, d); err != nil {
 		return
 	}
 	return

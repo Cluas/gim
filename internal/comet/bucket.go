@@ -3,6 +3,8 @@ package comet
 import (
 	"sync"
 	"sync/atomic"
+
+	"github.com/Cluas/gim/pkg/log"
 )
 
 // BucketOptions is struct of Bucket Config
@@ -17,24 +19,30 @@ type BucketOptions struct {
 type Bucket struct {
 	cLock       sync.RWMutex        // protect the channels for chs
 	chs         map[string]*Channel // map sub key to a channel
-	o           *BucketOptions
-	rooms       map[string]*Room // bucket room channel
+	o           *BucketOptions      // bucket options
+	rooms       map[string]*Room    // bucket room channel
 	routines    []chan *RoomMsgArg
 	routinesNum uint64
 	broadcast   chan []byte
 }
 
 // NewBucket is constructor of Bucket
-func NewBucket(o *BucketOptions) *Bucket {
-	return &Bucket{
-		chs:   make(map[string]*Channel, o.ChannelSize),
-		o:     o,
-		rooms: make(map[string]*Room, o.RoomSize),
+func NewBucket(o *BucketOptions) (b *Bucket) {
+	b = new(Bucket)
+	b.chs = make(map[string]*Channel, o.ChannelSize)
+	b.o = o
+	b.routines = make([]chan *RoomMsgArg, o.RoutineAmount)
+	b.rooms = make(map[string]*Room, o.RoomSize)
+	for i := uint64(0); i < b.o.RoutineAmount; i++ {
+		c := make(chan *RoomMsgArg, o.RoutineSize)
+		b.routines[i] = c
+		go b.PushRoom(c)
 	}
+	return
 }
 
 // Put is func to add channel
-func (b *Bucket) Put(key string, rid string, ch *Channel) error {
+func (b *Bucket) Put(uid string, rid string, ch *Channel) (err error) {
 	var (
 		room *Room
 		ok   bool
@@ -48,14 +56,14 @@ func (b *Bucket) Put(key string, rid string, ch *Channel) error {
 		}
 		ch.Room = room
 	}
-	b.chs[key] = ch
+	ch.uid = uid
+	b.chs[uid] = ch
 	b.cLock.Unlock()
 
 	if room != nil {
-		err := room.Put(ch)
-		return err
+		err = room.Put(ch)
 	}
-	return nil
+	return
 }
 
 // Channel is func to get Channel from Bucket by key
@@ -98,6 +106,7 @@ func (b *Bucket) PushRoom(c chan *RoomMsgArg) {
 		arg = <-c
 
 		if room = b.Room(arg.RoomID); room != nil {
+			log.Bg().Info("开始推送消息")
 			room.Push(&arg.P)
 		}
 
@@ -105,7 +114,7 @@ func (b *Bucket) PushRoom(c chan *RoomMsgArg) {
 
 }
 
-// Room get a room by roomid.
+// Room get a room by rid.
 func (b *Bucket) Room(rid string) (room *Room) {
 	b.cLock.RLock()
 	room, _ = b.rooms[rid]
@@ -113,12 +122,10 @@ func (b *Bucket) Room(rid string) (room *Room) {
 	return
 }
 
-// BroadcastRoom is func to broadcast room
+// BroadcastRoom is used to broadcast room
 func (b *Bucket) BroadcastRoom(arg *RoomMsgArg) {
 	// 广播消息递增id
 	num := atomic.AddUint64(&b.routinesNum, 1) % b.o.RoutineAmount
-	// log.Infof("BroadcastRoom RoomMsgArg :%s", arg)
-	// log.Infof("bucket routinesNum :%d", b.routinesNum)
 	b.routines[num] <- arg
 
 }

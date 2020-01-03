@@ -28,9 +28,11 @@ make run
 // stop
 make stop
 ```
-### third package
-* og: github.com/uber-go/zap
+### 依赖环境
+#### 语言
+* go1.13
+#### 第三方包
+* log: github.com/uber-go/zap
 * rpc: github.com/smallnest/rpcx
 * websocket: github.com/gorilla/websocket
 * config：github.com/spf13/viper
-

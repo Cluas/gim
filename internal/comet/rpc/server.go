@@ -5,59 +5,58 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Cluas/gim/internal/comet"
+	"github.com/smallnest/rpcx/server"
+	"github.com/smallnest/rpcx/serverplugin"
+	"go.uber.org/zap"
 
+	"github.com/Cluas/gim/internal/comet"
 	"github.com/Cluas/gim/internal/comet/conf"
 	"github.com/Cluas/gim/pkg/log"
-	rpclog "github.com/smallnest/rpcx/log"
-	"github.com/smallnest/rpcx/server"
 )
 
 const (
-	Success    = 0
-	SuccessMsg = "success"
+	successCode = 0
+	successMsg  = "success"
+	splitString = "@"
 )
 
+// PushMsgArg is struct of push msg arg
 type PushMsgArg struct {
 	UID string
 	P   comet.Proto
 }
 
-type NoReply struct {
-}
-
+// SuccessReply if struct of success reply
 type SuccessReply struct {
 	Code int    `json:"code"`
 	Msg  string `json:"msg"`
 }
 
-type CometRPC int
+// Server is struct of Comet RPC Server
+type Server int
 
-const (
-	split = "@"
-)
-
+// ParseNetwork is util func used to parse network
 func ParseNetwork(str string) (network, addr string, err error) {
-	if idx := strings.Index(str, split); idx == -1 {
+	if idx := strings.Index(str, splitString); idx == -1 {
 		err = fmt.Errorf("addr: \"%s\" error, must be network@tcp:port or network@unixsocket", str)
-		return
 	} else {
 		network = str[:idx]
 		addr = str[idx+1:]
-		return
 	}
+	return
 }
+
+// Init is func to initial comet rpc server
 func Init() (err error) {
 	var (
 		network, addr string
 	)
-	rpclog.SetLogger(log.Logger)
 	binds := conf.Conf.RPC.CometAddr
 	for _, bind := range binds {
 		if network, addr, err = ParseNetwork(bind.Addr); err != nil {
-			log.Panicf("InitLogicRpc ParseNetwork error : %s", err)
+			log.Bg().Panic("InitLogicRpc ParseNetwork error : ", zap.Error(err))
 		}
-		log.Infof("创建comet RPC, %s", bind.Addr)
+		log.Bg().Info("创建comet RPC", zap.String("bind", bind.Addr))
 		go createServer(network, addr)
 	}
 	return
@@ -65,42 +64,44 @@ func Init() (err error) {
 
 func createServer(network string, addr string) {
 	s := server.NewServer()
-	_ = s.RegisterName("CometRPC", new(CometRPC), "")
+	p := serverplugin.OpenTracingPlugin{}
+	s.Plugins.Add(p)
+	_ = s.RegisterName("CometRPC", new(Server), "")
 	_ = s.Serve(network, addr)
 }
 
-func (rpc *CometRPC) PushSingleMsg(ctx context.Context, args *PushMsgArg, SuccessReply *SuccessReply) (err error) {
+// PushSingleMsg is rpc func used to push single msg
+func (rpc *Server) PushSingleMsg(ctx context.Context, args *PushMsgArg, SuccessReply *SuccessReply) (err error) {
 	var (
 		bucket  *comet.Bucket
 		channel *comet.Channel
 	)
 
-	log.Info("rpc PushMsg :%v ", args)
 	if args == nil {
-		log.Errorf("rpc CometRPC() error(%v)", err)
+		log.For(ctx).Error("rpc Server() error", zap.Error(err))
 		return
 	}
-	bucket = comet.CurrentServer.Bucket(args.UID)
+
+	bucket = comet.CurrentServer.Bucket(ctx, args.UID)
 	if channel = bucket.Channel(args.UID); channel != nil {
 		err = channel.Push(&args.P)
-
-		log.Infof("DefaultServer Channel err nil : %v", err)
 		return
 	}
 
 	SuccessReply.Code = 1
 	SuccessReply.Msg = "success"
-	log.Infof("SuccessReply v :%v", SuccessReply)
 	return
 }
 
-func (rpc *CometRPC) PushRoomMsg(ctx context.Context, args *comet.RoomMsgArg, SuccessReply *SuccessReply) (err error) {
+// PushRoomMsg is func used tp push room msg
+func (rpc *Server) PushRoomMsg(ctx context.Context, args *comet.RoomMsgArg, SuccessReply *SuccessReply) (err error) {
 
-	SuccessReply.Code = Success
-	SuccessReply.Msg = SuccessMsg
-	log.Infof("PushRoomMsg msg %v", args)
+	SuccessReply.Code = successCode
+	SuccessReply.Msg = successMsg
+
 	for _, bucket := range comet.CurrentServer.Buckets {
 		bucket.BroadcastRoom(args)
 	}
+
 	return
 }

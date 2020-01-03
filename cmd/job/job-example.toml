@@ -1,7 +1,12 @@
 [base]
-pidfile = "/tmp/job.pid"
+pid_file = "/tmp/job.pid"
+[log]
+log_path = "./log.log"
+log_level = "debug"
 [redis]
 address = "localhost:6379"
 password = "redis123#"
-[rpc]
-RPCAddrs = "tcp@localhost:6923"
+default_db = 0
+[[comet]]
+key = 1
+addr = "tcp@0.0.0.0:6912"

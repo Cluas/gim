@@ -2,35 +2,70 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"io"
+	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
+
+	"go.uber.org/zap"
 
 	"github.com/Cluas/gim/internal/job"
 	"github.com/Cluas/gim/internal/job/conf"
 	"github.com/Cluas/gim/pkg/log"
+	"github.com/Cluas/gim/pkg/tracing"
 )
 
 func main() {
 	flag.Parse()
 
 	if err := conf.Init(); err != nil {
-		log.Errorf("Fatal error config file: %s \n", err)
+		log.Bg().Panic("初始化配置文件失败", zap.Error(err))
+	}
+	if conf.Conf.Log != nil {
+		log.Init(conf.Conf.Log)
 	}
 
-	// 设置cpu 核数
 	runtime.GOMAXPROCS(conf.Conf.Base.MaxProc)
 
-	// 初始化redis
+	_, closer := tracing.Init("job", nil)
+	defer Close(closer)
+
 	if err := job.InitRedis(); err != nil {
-		log.Panic(fmt.Errorf("InitRedis() fatal error : %s \n", err))
+		log.Bg().Panic("初始化Redis失败", zap.Error(err))
 	}
 
-	// 通过rpc初始化comet对应的 server bucket等
 	if err := job.InitComets(); err != nil {
-		log.Panic(fmt.Errorf("InitRPC() fatal error : %s \n", err))
+		log.Bg().Panic("初始化Comet客户端失败", zap.Error(err))
 	}
 
 	job.InitPush()
-	select {}
 
+	// signal
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
+	for {
+		s := <-c
+		log.Bg().Info("gim-job get a signal", zap.String("signal", s.String()))
+		switch s {
+		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT:
+			err := job.RedisCli.Close()
+			if err != nil {
+				log.Bg().Error("Redis关闭失败", zap.Error(err))
+			}
+			return
+		case syscall.SIGHUP:
+		default:
+			return
+		}
+	}
+
+}
+
+// Close id func to close
+func Close(c io.Closer) {
+	err := c.Close()
+	if err != nil {
+		log.Bg().Fatal("", zap.Error(err))
+	}
 }

@@ -1,20 +1,23 @@
 package job
 
+// Operation defines the type of operation.
+type Operation int
+
 const (
-	OP_SEND                = int32(1) //
-	OP_SINGLE_SEND         = int32(2) // 指定用户发送
-	OP_ROOM_SEND           = int32(3) // 广播到房间操作
-	OP_ROOM_COUNT_SEND     = int32(4) // 在线人数操作
-	OP_ROOM_INFO_SEND      = int32(5) // 用户信息发送操作
-	OP_ROOM_INFO_LESS_SEND = int32(6) // 用户在线列表减少用户
-	OP_ROOM_INFO_ADD_SEND  = int32(6) //用户在线列表增加用户
+	// OpSend 发送
+	_ Operation = iota + 1 //
+	// OpSingleSend 指定用户发送
+	OpSingleSend
+	// OpRoomSend 广播到房间操作
+	OpRoomSend
 )
 
 // RedisMsg is struct of RedisMsg
 type RedisMsg struct {
-	Op           int32             `json:"op"`
+	Carrier      []byte            `json:"carrier"` // 携带trace信息
+	Op           Operation         `json:"op"`
 	ServerID     int8              `json:"serverID,omitempty"`
-	RoomID       int32             `json:"roomID,omitempty"`
+	RoomID       string            `json:"roomID,omitempty"`
 	UserID       string            `json:"userID,omitempty"`
 	Msg          []byte            `json:"msg"`
 	Count        int               `json:"count"`

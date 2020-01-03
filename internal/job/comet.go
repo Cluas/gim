@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/smallnest/rpcx/client"
+	"go.uber.org/zap"
+
 	"github.com/Cluas/gim/internal/job/conf"
 	"github.com/Cluas/gim/pkg/log"
-	"github.com/smallnest/rpcx/client"
 )
 
 // RPCClientList is list of CometRPC
@@ -33,14 +35,14 @@ type NoReply struct {
 
 // RoomMsgArg is struct of room msg arg
 type RoomMsgArg struct {
-	RoomID int32
+	RoomID string
 	P      Proto
 }
 
 // Proto is struct of msg protocol
 type Proto struct {
 	Ver       int16           `json:"ver"`  // protocol version
-	Operation int32           `json:"op"`   // operation for request
+	Operation Operation       `json:"op"`   // operation for request
 	Body      json.RawMessage `json:"body"` // binary body bytes(json.RawMessage is []byte)
 
 }
@@ -55,32 +57,39 @@ func InitComets() (err error) {
 		b.Key = bind.Addr
 		CometAddress[i] = b
 		d := client.NewPeer2PeerDiscovery(bind.Addr, "")
-		RPCClientList[bind.Key] = client.NewXClient("CometRPC", client.Failtry, client.RandomSelect, d, client.DefaultOption)
-		log.Infof("CometRPC client %s", bind.Addr)
+		c := client.NewXClient("CometRPC", client.Failtry, client.RandomSelect, d, client.DefaultOption)
+		p := &client.OpenTracingPlugin{}
+		pc := client.NewPluginContainer()
+		pc.Add(p)
+		c.SetPlugins(pc)
+
+		RPCClientList[bind.Key] = c
+		log.Bg().Info("CometRPC client:", zap.String("bind", bind.Addr))
 	}
 	return
 
 }
 
-// PushSingle is func to PushSingle msg
-func PushSingle(serverID int8, userID string, msg []byte) {
+// pushSingle is func to pushSingle msg
+func pushSingle(ctx context.Context, serverID int8, userID string, msg []byte) {
 
-	pushMsgArg := &PushMsgArg{UID: userID, P: Proto{Ver: 1, Operation: 2, Body: msg}}
+	pushMsgArg := &PushMsgArg{UID: userID, P: Proto{Ver: 1, Operation: OpSingleSend, Body: msg}}
 	reply := &SuccessReply{}
-	err := RPCClientList[serverID].Call(context.Background(), "PushSingleMsg", pushMsgArg, reply)
+	err := RPCClientList[serverID].Call(ctx, "PushSingleMsg", pushMsgArg, reply)
 	if err != nil {
-		log.Infof(" PushSingle Call err %v", err)
+		log.For(ctx).Info("pushSingle Call err:", zap.Error(err))
 	}
-	log.Infof("reply %s", reply.Msg)
 }
 
 // broadcastRoom is func to broadcast room msg
-func broadcastRoom(RoomID int32, msg []byte) {
-	pushMsgArg := &RoomMsgArg{RoomID: RoomID, P: Proto{Ver: 1, Operation: 2, Body: msg}}
+func broadcastRoom(ctx context.Context, RoomID string, msg []byte) {
+	pushMsgArg := &RoomMsgArg{RoomID: RoomID, P: Proto{Ver: 1, Operation: OpRoomSend, Body: msg}}
 	reply := &SuccessReply{}
-	log.Infof("broadcastRoom room_id %d", RoomID)
 	for _, rpc := range RPCClientList {
-		log.Infof("broadcastRoom rpc  %v", rpc)
-		_ = rpc.Call(context.Background(), "PushRoomMsg", pushMsgArg, reply)
+		log.For(ctx).Info("job call comet PushRoomMsg")
+		err := rpc.Call(ctx, "PushRoomMsg", pushMsgArg, reply)
+		if err != nil {
+			log.For(ctx).Info("PushRoomMsg Call err:", zap.Error(err))
+		}
 	}
 }

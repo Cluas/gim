@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/smallnest/rpcx/server"
+	"github.com/smallnest/rpcx/serverplugin"
+	"go.uber.org/zap"
 
 	"github.com/Cluas/gim/internal/logic"
-
 	"github.com/Cluas/gim/internal/logic/conf"
 	"github.com/Cluas/gim/pkg/log"
-	"github.com/smallnest/rpcx/server"
 )
 
 // Server is struct of logic rpc server
@@ -32,6 +35,17 @@ type ConnectReply struct {
 	UID string
 }
 
+// DisconnectArg is struct of disconnect arg
+type DisconnectArg struct {
+	RoomID string
+	UID    string
+}
+
+//DisconnectReply is struct of disconnect reply
+type DisconnectReply struct {
+	Has bool
+}
+
 // ParseNetwork is func to parse network string
 func ParseNetwork(str string) (network, addr string, err error) {
 	if idx := strings.Index(str, split); idx == -1 {
@@ -51,8 +65,9 @@ func Init() (err error) {
 	)
 	for _, bind := range conf.Conf.RPC.Address {
 		if network, addr, err = ParseNetwork(bind); err != nil {
-			log.Panicf("InitLogicRpc ParseNetwork error : %s", err)
+			log.Bg().Panic("InitLogicRpc ParseNetwork error", zap.Error(err))
 		}
+		log.Bg().Info("创建Logic RPC", zap.String("bind", bind))
 		go createServer(network, addr)
 	}
 	return
@@ -61,33 +76,40 @@ func Init() (err error) {
 func createServer(network string, addr string) {
 
 	s := server.NewServer()
+	p := serverplugin.OpenTracingPlugin{}
+	s.Plugins.Add(p)
 	_ = s.RegisterName("LogicRPC", new(Server), "")
 	_ = s.Serve(network, addr)
 
 }
 
 // Connect is api for connect
-func (rpc *Server) Connect(ctx context.Context, args *ConnectArg, reply *ConnectReply) (err error) {
+func (rpc *Server) Connect(_ context.Context, args *ConnectArg, reply *ConnectReply) (err error) {
 
-	if args == nil {
-		log.Errorf("Connect() error(%v)", err)
-		return
-	}
 	if len(args.Auth) == 0 {
-		log.Infof("token err: %s", args.Auth)
 		return
 	}
-	member, err := logic.JwtParseMember(args.Auth)
-
+	var member *Member
+	member, err = JwtParseMember(args.Auth)
 	if err != nil {
-		log.Errorf("JWT error:%v", err)
+
 	}
 
 	if member != nil {
 		reply.UID = strconv.Itoa(member.ID)
-		log.Infof("logic rpc uid:%s", reply.UID)
-		logic.RedisCli.Set(logic.REDIS_AUTH_PREFIX+reply.UID, args.ServerID, 86400)
-		logic.RedisCli.HSet(logic.REDIS_ROOM_USER_PREFIX+reply.UID, reply.UID, member.Nickname)
+		logic.RedisCli.Set(logic.RedisAuthPrefix+reply.UID, args.ServerID, logic.RedisBaseValidTime*time.Second)
+		logic.RedisCli.HSet(logic.RedisRoomUserPrefix+args.RoomID, reply.UID, member.Nickname)
+	}
+
+	return
+}
+
+// Disconnect if func to remove room user
+func (rpc *Server) Disconnect(_ context.Context, args *DisconnectArg, reply *DisconnectReply) (err error) {
+	if args.UID != "" {
+		err = logic.RedisCli.HDel(logic.RedisRoomUserPrefix+args.RoomID, args.UID).Err()
+		reply.Has = true
+
 	}
 
 	return
